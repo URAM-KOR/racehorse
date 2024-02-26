@@ -21,9 +21,13 @@ from datetime import datetime
 # AcessKey: YMwqzCW7uVbtSOQdEfvwmxc6PIbjc83TAsxoxsFj
 # SecretKey: msp97VPjshYlxBFKQZ61QKvQsFXRIxskNSbCsA7w
 
+# AWS imgumx@gmail.com
+# AcessKey: kLp3CfN4jFOb2TJSS2jSXxWkbIFGzTr3lBG3SBO4
+# SecretKey: bxaj9CkUrX4CKClsWNVcuSi6HztajOKcjEs8sBve
+
 # Keys
-access_key = 'xYz9kHDxLdzaeDvISNU3NIQ4APTxhFFQsQ6rAI21'
-secret_key = 'xmUP96jyhkYxIkeuDq2MkPrbSFuOSwAdVS1pIBdW'
+access_key = 'kLp3CfN4jFOb2TJSS2jSXxWkbIFGzTr3lBG3SBO4'
+secret_key = 'bxaj9CkUrX4CKClsWNVcuSi6HztajOKcjEs8sBve'
 server_url = 'https://api.upbit.com'
 ws_url = 'wss://api.upbit.com/websocket/v1'
 line_target_url = 'https://notify-api.line.me/api/notify'
