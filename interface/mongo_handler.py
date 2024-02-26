@@ -63,12 +63,12 @@ class MongoDBHandler:
 
 # MongoDBHandler().create_ttl_index("rise_top_5", "trade_timestamp")
 
-# collection_name = "rise_top_5"
-# index_field = "trade_timestamp"
+# collection_name = "rise_top_3"
+# index_field = "trade_utc"
 # collection = MongoDBHandler().client[MongoDBConfig.get('DATABASE')][collection_name]
 #
 # # 기존 TTL 인덱스 삭제
-# collection.drop_index("trade_timestamp_1")
+# collection.drop_index("trade_utc")
 #
 # # 새로운 TTL 인덱스 생성
-# collection.create_index([(index_field, 1)], expireAfterSeconds=2.3 * 24 * 60 * 60)
+# collection.create_index([(index_field, 1)], expireAfterSeconds=7 * 24 * 60 * 60)
