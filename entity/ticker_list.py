@@ -53,6 +53,7 @@ one_year_ago_string = one_year_ago.strftime("%Y-%m-%dT%H:%M:%SZ")
 items = get_items(market='KRW', except_item='')
 
 all_candles = []
+buy_list = {}
 candles = [True]
 
 for ticker in items:
@@ -60,8 +61,10 @@ for ticker in items:
     candles = set_candles(candles)
     print(candles)
     all_candles.append(candles)
-
-print(all_candles)
+    
+    # filter
+    if candles['change_rate_1w'] >= 0.15:
+        buy_list[candles['market']] = 0
 
 top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
 top_change_rate_1m = sorted(all_candles, key=lambda x: x['change_rate_1m'], reverse=True)[:5]
@@ -69,29 +72,32 @@ top_change_rate_3m = sorted(all_candles, key=lambda x: x['change_rate_3m'], reve
 top_change_rate_6m = sorted(all_candles, key=lambda x: x['change_rate_6m'], reverse=True)[:5]
 top_change_rate_1y = sorted(all_candles, key=lambda x: x['change_rate_1y'], reverse=True)[:5]
 
+
 print(top_change_rate_1w)
 print(top_change_rate_1m)
 print(top_change_rate_3m)
 print(top_change_rate_6m)
 print(top_change_rate_1y)
 
-buy_list = {}
+# rate 계산
+for ticker in top_change_rate_1w:
+    print(ticker['market'])
+    if buy_list.get(ticker['market'], False):
+        buy_list[ticker['market']]+=1
+for ticker in top_change_rate_1m: 
+    if buy_list.get(ticker['market'], False):
+        buy_list[ticker['market']]+=1
+for ticker in top_change_rate_3m:
+    if buy_list.get(ticker['market'], False):
+        buy_list[ticker['market']]+=1
+for ticker in top_change_rate_6m:
+    if buy_list.get(ticker['market'], False):
+        buy_list[ticker['market']]+=1
+for ticker in top_change_rate_1y:
+    if buy_list.get(ticker['market'], False):
+        buy_list[ticker['market']]+=1
 
-
-for ticker in top_change_rate_1w.keys():
-    buy_list[ticker]=1
-for ticker in top_change_rate_1m.keys():
-    if buy_list.get(ticker, False):
-        buy_list[ticker]=buy_list[ticker]+1
-for ticker in top_change_rate_3m.keys():
-    if buy_list.get(ticker, False):
-        buy_list[ticker]=buy_list[ticker]+1
-for ticker in top_change_rate_6m.keys():
-    if buy_list.get(ticker, False):
-        buy_list[ticker]=buy_list[ticker]+1
-for ticker in top_change_rate_1y.keys():
-    if buy_list.get(ticker, False):
-        buy_list[ticker]=buy_list[ticker]+1
+print(buy_list)
 
 # 잔고 조회 
 def get_balance(ticker):
