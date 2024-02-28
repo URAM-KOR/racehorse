@@ -56,17 +56,12 @@ all_candles = []
 buy_list = {}
 candles = [True]
 
-for ticker in items[:]:
+for ticker in items[:5]:
     candles = get_candle(ticker['market'], '240', int(2274))[:]
     candles = set_candles(candles)
     print(candles)
     all_candles.append(candles)
     
-    # # filter
-    # if candles['change_rate_1w'] >= 0.15:
-    #     buy_list[candles['market']] = 0
-    buy_list[candles['market']] = 0
-
 top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
 top_change_rate_1m = sorted(all_candles, key=lambda x: x['change_rate_1m'], reverse=True)[:5]
 top_change_rate_3m = sorted(all_candles, key=lambda x: x['change_rate_3m'], reverse=True)[:5]
