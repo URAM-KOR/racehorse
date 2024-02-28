@@ -42,57 +42,63 @@ from interface.upbit import get_items, get_candle
 import time
 start_time = time.time()
 
-# 현재 시간 가져오기
-current_time = datetime.now()
+def ticker_list():
+    """
+    return: list of ticker
+    """
+    # 현재 시간 가져오기
+    current_time = datetime.now()
 
-# 1년 전 계산
-one_year_ago = current_time - timedelta(hours=8760)
-one_year_ago_string = one_year_ago.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # 1년 전 계산
+    one_year_ago = current_time - timedelta(hours=8760)
+    one_year_ago_string = one_year_ago.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-# 데이터를 담을 리스트
-items = get_items(market='KRW', except_item='')
+    # 데이터를 담을 리스트
+    items = get_items(market='KRW', except_item='')
 
-all_candles = []
-buy_list = {}
-candles = [True]
+    all_candles = []
+    buy_list = {}
+    candles = [True]
 
-for ticker in items[:]:
-    candles = get_candle(ticker['market'], '240', int(2274))[:]
-    candles = set_candles(candles)
-    print(candles)
-    all_candles.append(candles)
-    
-top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
-top_change_rate_1m = sorted(all_candles, key=lambda x: x['change_rate_1m'], reverse=True)[:5]
-top_change_rate_3m = sorted(all_candles, key=lambda x: x['change_rate_3m'], reverse=True)[:5]
-top_change_rate_6m = sorted(all_candles, key=lambda x: x['change_rate_6m'], reverse=True)[:5]
-top_change_rate_1y = sorted(all_candles, key=lambda x: x['change_rate_1y'], reverse=True)[:5]
+    for ticker in items[:]:
+        candles = get_candle(ticker['market'], '240', int(2274))[:]
+        candles = set_candles(candles)
+        print(candles)
+        all_candles.append(candles)
+        
+    top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
+    top_change_rate_1m = sorted(all_candles, key=lambda x: x['change_rate_1m'], reverse=True)[:5]
+    top_change_rate_3m = sorted(all_candles, key=lambda x: x['change_rate_3m'], reverse=True)[:5]
+    top_change_rate_6m = sorted(all_candles, key=lambda x: x['change_rate_6m'], reverse=True)[:5]
+    top_change_rate_1y = sorted(all_candles, key=lambda x: x['change_rate_1y'], reverse=True)[:5]
 
-print(top_change_rate_1w)
-print(top_change_rate_1m)
-print(top_change_rate_3m)
-print(top_change_rate_6m)
-print(top_change_rate_1y)
+    print(top_change_rate_1w)
+    print(top_change_rate_1m)
+    print(top_change_rate_3m)
+    print(top_change_rate_6m)
+    print(top_change_rate_1y)
 
-# rate 계산
-for ticker in top_change_rate_1w:
-    buy_list[ticker['market']]=1
-    if buy_list.get(ticker['market'], False):
-        print(buy_list)
-for ticker in top_change_rate_1m: 
-    if ticker['market'] in buy_list.keys():
-        buy_list[ticker['market']]+=1
-for ticker in top_change_rate_3m:
-    if ticker['market'] in buy_list.keys():
-        buy_list[ticker['market']]+=1
-for ticker in top_change_rate_6m:
-    if ticker['market'] in buy_list.keys():
-        buy_list[ticker['market']]+=1
-for ticker in top_change_rate_1y:
-    if ticker['market'] in buy_list.keys():
-        buy_list[ticker['market']]+=1
+    # rate 계산
+    for index, ticker in enumerate(top_change_rate_1w):
+        buy_list[ticker['market']]=1 * index
+        if buy_list.get(ticker['market'], False):
+            print(buy_list)
+    for index, ticker in enumerate(top_change_rate_1m):
+        if ticker['market'] in buy_list.keys():
+            buy_list[ticker['market']]+=1 * index
+    for index, ticker in enumerate(top_change_rate_3m):
+        if ticker['market'] in buy_list.keys():
+            buy_list[ticker['market']]+=1 * index
+    for index, ticker in enumerate(top_change_rate_6m):
+        if ticker['market'] in buy_list.keys():
+            buy_list[ticker['market']]+=1 * index
+    for index, ticker in enumerate(top_change_rate_1y):
+        if ticker['market'] in buy_list.keys():
+            buy_list[ticker['market']]+=1 * index
 
-print(buy_list)
+    print(buy_list)
+    return buy_list
+
 
 # 잔고 조회 
 def get_balance(ticker):
