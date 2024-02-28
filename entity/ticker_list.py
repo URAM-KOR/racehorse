@@ -56,7 +56,7 @@ all_candles = []
 buy_list = {}
 candles = [True]
 
-for ticker in items[:5]:
+for ticker in items[:]:
     candles = get_candle(ticker['market'], '240', int(2274))[:]
     candles = set_candles(candles)
     print(candles)
@@ -76,7 +76,7 @@ print(top_change_rate_1y)
 
 # rate 계산
 for ticker in top_change_rate_1w:
-    buy_list[ticker['market']]+=1
+    buy_list[ticker['market']]=1
     if buy_list.get(ticker['market'], False):
         print(buy_list)
 for ticker in top_change_rate_1m: 
