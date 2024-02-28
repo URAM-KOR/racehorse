@@ -56,7 +56,7 @@ all_candles = []
 buy_list = {}
 candles = [True]
 
-for ticker in items[:5]:
+for ticker in items[:]:
     candles = get_candle(ticker['market'], '240', int(2274))[:]
     candles = set_candles(candles)
     print(candles)
