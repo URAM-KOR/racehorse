@@ -10,7 +10,7 @@ def set_candles(candles):
     one_year_ago_candles = candles[2190] if 2190 <= len(candles) else candles[-1]
     six_month_ago_candles = candles[1107] if 1107 <= len(candles) else candles[-1] 
     three_month_ago_candles = candles[547] if 547 <= len(candles) else candles[-1]
-    one_month_ago_candles = candles[188] if 188 <= len(candles) else candles[-1]  
+    one_month_ago_candles = candles[188] if 188 <= len(candles) else candles[-1]
     one_week_ago_candles = candles[48] if 48 <= len(candles) else candles[-1]
     one_day_ago_candles = candles[0]
 
