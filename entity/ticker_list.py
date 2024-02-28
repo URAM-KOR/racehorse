@@ -7,11 +7,11 @@ def set_candles(candles):
         all = []
         return all
     
-    one_year_ago_candles = candles[2190] if 2190 <= len(candles) else candles[0]
-    six_month_ago_candles = candles[1107] if 1107 <= len(candles) else candles[0] 
-    three_month_ago_candles = candles[547] if 547 <= len(candles) else candles[0]
-    one_month_ago_candles = candles[188] if 188 <= len(candles) else candles[0]  
-    one_week_ago_candles = candles[48] if 48 <= len(candles) else candles[0]
+    one_year_ago_candles = candles[2190] if 2190 <= len(candles) else candles[-1]
+    six_month_ago_candles = candles[1107] if 1107 <= len(candles) else candles[-1] 
+    three_month_ago_candles = candles[547] if 547 <= len(candles) else candles[-1]
+    one_month_ago_candles = candles[188] if 188 <= len(candles) else candles[-1]  
+    one_week_ago_candles = candles[48] if 48 <= len(candles) else candles[-1]
     one_day_ago_candles = candles[0]
 
     all = [one_year_ago_candles, six_month_ago_candles, three_month_ago_candles, one_month_ago_candles, one_week_ago_candles]
@@ -56,22 +56,22 @@ all_candles = []
 buy_list = {}
 candles = [True]
 
-for ticker in items:
+for ticker in items[:5]:
     candles = get_candle(ticker['market'], '240', int(2274))[:]
     candles = set_candles(candles)
     print(candles)
     all_candles.append(candles)
     
-    # filter
-    if candles['change_rate_1w'] >= 0.15:
-        buy_list[candles['market']] = 0
+    # # filter
+    # if candles['change_rate_1w'] >= 0.15:
+    #     buy_list[candles['market']] = 0
+    buy_list[candles['market']] = 0
 
 top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
 top_change_rate_1m = sorted(all_candles, key=lambda x: x['change_rate_1m'], reverse=True)[:5]
 top_change_rate_3m = sorted(all_candles, key=lambda x: x['change_rate_3m'], reverse=True)[:5]
 top_change_rate_6m = sorted(all_candles, key=lambda x: x['change_rate_6m'], reverse=True)[:5]
 top_change_rate_1y = sorted(all_candles, key=lambda x: x['change_rate_1y'], reverse=True)[:5]
-
 
 print(top_change_rate_1w)
 print(top_change_rate_1m)
@@ -81,20 +81,20 @@ print(top_change_rate_1y)
 
 # rate 계산
 for ticker in top_change_rate_1w:
-    print(ticker['market'])
+    buy_list[ticker['market']]+=1
     if buy_list.get(ticker['market'], False):
-        buy_list[ticker['market']]+=1
+        print(buy_list)
 for ticker in top_change_rate_1m: 
-    if buy_list.get(ticker['market'], False):
+    if ticker['market'] in buy_list.keys():
         buy_list[ticker['market']]+=1
 for ticker in top_change_rate_3m:
-    if buy_list.get(ticker['market'], False):
+    if ticker['market'] in buy_list.keys():
         buy_list[ticker['market']]+=1
 for ticker in top_change_rate_6m:
-    if buy_list.get(ticker['market'], False):
+    if ticker['market'] in buy_list.keys():
         buy_list[ticker['market']]+=1
 for ticker in top_change_rate_1y:
-    if buy_list.get(ticker['market'], False):
+    if ticker['market'] in buy_list.keys():
         buy_list[ticker['market']]+=1
 
 print(buy_list)
@@ -121,4 +121,4 @@ for ticker, volume in buy_list.items():
     buy(ticker, volume)
         
 end_time = time.time()
-print("실행 시간 : ", end_time - start_time)
+print("실행 시간 : ", end_time - start_time)                          
