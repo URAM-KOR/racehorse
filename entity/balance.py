@@ -23,4 +23,4 @@ def get_ticker(balance):
 
 	return krw_balance
 
-krw_balance = get_ticker(balance)
+# krw_balance = get_ticker(balance)

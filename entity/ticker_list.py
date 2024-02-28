@@ -117,9 +117,7 @@ def buy(ticker, volume, price=1):
     "buy ticker with volume at price"
     pass
 
-for ticker, volume in buy_list.items():
-    get_balance(ticker)
-    buy(ticker, volume)
+ticker_list()
         
 end_time = time.time()
 print("실행 시간 : ", end_time - start_time)                          
