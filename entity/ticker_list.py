@@ -13,7 +13,7 @@ def set_candles(candles):
     one_month_ago_candles = candles[188] if 188 <= len(candles) else candles[-1]
     one_week_ago_candles = candles[48] if 48 <= len(candles) else candles[-1]
     one_day_ago_candles = candles[0]
-
+    
     all = [one_year_ago_candles, six_month_ago_candles, three_month_ago_candles, one_month_ago_candles, one_week_ago_candles]
     # 남길 키 지정
     keys_to_keep = ["market", "opening_price", "trade_price", "candle_date_time_kst"]
@@ -63,7 +63,6 @@ def ticker_list():
     for ticker in items[:]:
         candles = get_candle(ticker['market'], '240', int(2274))[:]
         candles = set_candles(candles)
-        print(candles)
         all_candles.append(candles)
         
     top_change_rate_1w = sorted(all_candles, key=lambda x: x['change_rate_1w'], reverse=True)[:5]
@@ -72,31 +71,27 @@ def ticker_list():
     top_change_rate_6m = sorted(all_candles, key=lambda x: x['change_rate_6m'], reverse=True)[:5]
     top_change_rate_1y = sorted(all_candles, key=lambda x: x['change_rate_1y'], reverse=True)[:5]
 
-    print(top_change_rate_1w)
-    print(top_change_rate_1m)
-    print(top_change_rate_3m)
-    print(top_change_rate_6m)
-    print(top_change_rate_1y)
+    # print(top_change_rate_1w)
+    # print(top_change_rate_1m)
+    # print(top_change_rate_3m)
+    # print(top_change_rate_6m)
+    # print(top_change_rate_1y)
 
     # rate 계산
     for index, ticker in enumerate(top_change_rate_1w):
-        buy_list[ticker['market']]=1 * index
-        if buy_list.get(ticker['market'], False):
-            print(buy_list)
+        buy_list[ticker['market']]=(index+1)/75
     for index, ticker in enumerate(top_change_rate_1m):
         if ticker['market'] in buy_list.keys():
-            buy_list[ticker['market']]+=1 * index
+            buy_list[ticker['market']]+=(index+1)/75
     for index, ticker in enumerate(top_change_rate_3m):
         if ticker['market'] in buy_list.keys():
-            buy_list[ticker['market']]+=1 * index
+            buy_list[ticker['market']]+=(index+1)/75
     for index, ticker in enumerate(top_change_rate_6m):
         if ticker['market'] in buy_list.keys():
-            buy_list[ticker['market']]+=1 * index
+            buy_list[ticker['market']]+=(index+1)/75
     for index, ticker in enumerate(top_change_rate_1y):
         if ticker['market'] in buy_list.keys():
-            buy_list[ticker['market']]+=1 * index
-
-    print(buy_list)
+            buy_list[ticker['market']]+=(index+1)/75
     return buy_list
 
 
@@ -117,7 +112,7 @@ def buy(ticker, volume, price=1):
     "buy ticker with volume at price"
     pass
 
-ticker_list()
+buy_list = ticker_list()
         
 end_time = time.time()
 print("실행 시간 : ", end_time - start_time)                          

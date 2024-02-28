@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import numpy
 
-from urllib.parse import urlencode
+from urllib.parse import urlencode, unquote
 from decimal import Decimal
 from datetime import datetime
 
@@ -214,15 +214,14 @@ def get_items(market, except_item):
 # -----------------------------------------------------------------------------
 def buycoin_mp(target_item, buy_amount):
     try:
-
-        query = {
+        params = {
             'market': target_item,
             'side': 'bid',
             'price': buy_amount,
             'ord_type': 'price',
         }
 
-        query_string = urlencode(query).encode()
+        query_string = unquote(urlencode(params, doseq=True)).encode("utf-8")
 
         m = hashlib.sha512()
         m.update(query_string)
@@ -235,11 +234,12 @@ def buycoin_mp(target_item, buy_amount):
             'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = send_request("POST", server_url + "/v1/orders", query, headers)
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization = 'Bearer {}'.format(jwt_token)
+        headers = {
+        'Authorization': authorization,
+        }
+        res = send_request("POST", server_url + "/v1/orders", params, headers)
         rtn_data = res.json()
 
         logging.info("")
@@ -281,7 +281,7 @@ def buycoin_tg(target_item, buy_amount, buy_price):
             'ord_type': 'limit',
         }
 
-        query_string = urlencode(query).encode()
+        query_string = unquote(urlencode(params, doseq=True)).encode("utf-8")
 
         m = hashlib.sha512()
         m.update(query_string)
@@ -294,10 +294,11 @@ def buycoin_tg(target_item, buy_amount, buy_price):
             'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization = 'Bearer {}'.format(jwt_token)
+        headers = {
+        'Authorization': authorization,
+        }
         res = send_request("POST", server_url + "/v1/orders", query, headers)
         rtn_data = res.json()
 
@@ -326,24 +327,19 @@ def buycoin_tg(target_item, buy_amount, buy_price):
 #   1) rtn_data : 매도결과
 # -----------------------------------------------------------------------------
 # 시장가 매도
-def sellcoin_mp(target_item, cancel_yn):
+def sellcoin_mp(target_item, volume):
     try:
-
-        if cancel_yn == 'Y':
-            # 기존 주문이 있으면 취소
-            cancel_order(target_item, "SELL")
-
         # 잔고 조회
         cur_balance = get_balance(target_item)
 
-        query = {
+        params = {
             'market': target_item,
             'side': 'ask',
-            'volume': cur_balance,
+            'volume': volume,
             'ord_type': 'market',
         }
-
-        query_string = urlencode(query).encode()
+        
+        query_string = unquote(urlencode(params, doseq=True)).encode("utf-8")
 
         m = hashlib.sha512()
         m.update(query_string)
@@ -356,11 +352,12 @@ def sellcoin_mp(target_item, cancel_yn):
             'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = send_request("POST", server_url + "/v1/orders", query, headers)
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization = 'Bearer {}'.format(jwt_token)
+        headers = {
+        'Authorization': authorization,
+        }
+        res = send_request("POST", server_url + "/v1/orders", params, headers)
         rtn_data = res.json()
 
         logging.info("")
@@ -407,16 +404,15 @@ def sellcoin_tg(target_item, sell_price):
         m.update(query_string)
         query_hash = m.hexdigest()
 
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("POST", server_url + "/v1/orders", query, headers)
         rtn_data = res.json()
@@ -758,14 +754,15 @@ def get_accounts(except_yn, market_code):
         # 소액 제외 기준
         min_price = 5000
 
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
         }
 
         jwt_token = jwt.encode(payload, secret_key)
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("GET", server_url + "/v1/accounts", "", headers)
         account_data = res.json()
@@ -845,10 +842,11 @@ def chg_account_to_comma(account_data):
 def get_ticker(target_itemlist):
     try:
 
-        url = "https://api.upbit.com/v1/ticker"
+        url = f"https://api.upbit.com/v1/ticker"
 
         querystring = {"markets": target_itemlist}
-        response = send_request("GET", url, querystring, "")
+        headers = {"accept": "application/json"}
+        response = send_request("GET", url, querystring, headers)
 
         rtn_data = response.json()
 
@@ -920,16 +918,15 @@ def cancel_order_uuid(order_uuid):
         m.update(query_string)
         query_hash = m.hexdigest()
 
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("DELETE", server_url + "/v1/order", query, headers)
         rtn_data = res.json()
@@ -964,16 +961,15 @@ def get_order(target_item):
         m.update(query_string)
         query_hash = m.hexdigest()
 
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("GET", server_url + "/v1/orders", query, headers)
         rtn_data = res.json()
@@ -1007,16 +1003,15 @@ def get_order_list(side):
         m.update(query_string)
         query_hash = m.hexdigest()
 
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("GET", server_url + "/v1/orders", query, headers)
         rtn_data = res.json()
@@ -1721,13 +1716,11 @@ def get_order_status(target_item, status):
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("GET", server_url + "/v1/orders", query, headers)
         rtn_data = res.json()
@@ -1814,13 +1807,11 @@ def get_order_chance(target_item):
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, secret_key).decode('utf8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key)
+        authorization_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorization_token}
 
         res = send_request("GET", server_url + "/v1/orders/chance", query, headers)
         rtn_data = res.json()
