@@ -22,6 +22,7 @@ for my_ticker in krw_balance.keys():
 # 차액 체크
 for buy_ticker in buy_list.keys():
 	print("buy_ticker:", buy_ticker)
+	time.sleep(0.1)
 	try:
 		difference_balance = krw_balance['total'] * buy_list[buy_ticker] - krw_balance.get(buy_ticker, {}).get('balance_krw', 0)
 		print("difference_balance:", difference_balance)
@@ -29,7 +30,7 @@ for buy_ticker in buy_list.keys():
 			buycoin_mp(buy_ticker, str(difference_balance))
 			print("successed buy ", buy_ticker)
 		if difference_balance < 0:
-			difference_balance = difference_balance/krw_balance[buy_ticker].get('trade_price', 1)
+			difference_balance = difference_balance/krw_balance.get(buy_ticker, {}).get('trade_price', 1)
 			sellcoin_mp(buy_ticker, str(-difference_balance))
 			print("successed sell ", buy_ticker)
 	except Exception as e:
