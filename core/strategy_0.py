@@ -12,16 +12,17 @@ from entity.ticker_list import buy_list
 
 # wallet 점검
 for my_ticker in krw_balance.keys():
+	print("my_ticker:", my_ticker)
 	try:
 		if my_ticker not in buy_list.keys():
-			sellcoin_mp(my_ticker, str(krw[my_ticker]['balance']))
+			sellcoin_mp(my_ticker, str(krw_balance[my_ticker]['balance']))
 	except Exception as e:
 		print(e)
+		continue
 
 # 차액 체크
 for buy_ticker in buy_list.keys():
 	print("buy_ticker:", buy_ticker)
-	time.sleep(0.1)
 	try:
 		difference_balance = krw_balance['total'] * buy_list[buy_ticker] - krw_balance.get(buy_ticker, {}).get('balance_krw', 0)
 		print("difference_balance:", difference_balance)
@@ -34,3 +35,4 @@ for buy_ticker in buy_list.keys():
 			print("successed sell ", buy_ticker)
 	except Exception as e:
 		print(e)
+		continue
