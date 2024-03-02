@@ -5,7 +5,7 @@ if __name__ == '__main__':
 		from os import path
 		sys.path.append(path.dirname( path.dirname( path.abspath(__file__) ) ))
 
-from interface.upbit import get_balance, get_ticker, get_items
+from interface.upbit import get_balance, get_ticker
 import pickle
 import os
 
@@ -54,11 +54,12 @@ def _update_profit_dict(current_total):
 # result_profit_dict = _update_profit_dict(current_total_value)
 # print(result_profit_dict)
 
-balance = get_balance('KRW')
-def get_my_balance(balance):
-	krw_balance = {'total':float(balance[0]['balance'])}
+def get_my_balance():
+	balance = get_balance('KRW')
+	krw_balance = {'total':float(next(item['balance'] for item in balance if item['currency'] == 'KRW'))}
+	print(balance)
 	for ticker in balance:
-		print(ticker['currency'])
+		# print(ticker['currency'])
 		try:
 			krw_ticker = get_ticker(f"KRW-{ticker['currency']}")[0]['trade_price'] * float(ticker['balance'])
 			krw_balance['total'] += krw_ticker
@@ -67,14 +68,13 @@ def get_my_balance(balance):
 			krw_balance[f"KRW-{ticker['currency']}"]['balance']=float(ticker['balance'])
 			krw_balance[f"KRW-{ticker['currency']}"]['trade_price']=get_ticker(f"KRW-{ticker['currency']}")[0]['trade_price']
 		except Exception as e:
-			print(e)
+			# print(e)
 			continue
 
-	print('fetched get my balance')
 	profit_dict = _update_profit_dict(krw_balance['total'])
 	print(profit_dict)
 	krw_balance['total'] -= profit_dict['profit']/2
 	return krw_balance
 
-krw_balance = get_my_balance(balance)
-print(krw_balance)
+# krw_balance = get_my_balance()
+# print(krw_balance)

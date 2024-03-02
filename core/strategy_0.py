@@ -7,17 +7,28 @@ if __name__ == '__main__':
 
 
 from interface.upbit import buycoin_mp, sellcoin_mp
-from entity.balance import krw_balance
-from entity.ticker_list import buy_list
+from entity.balance import get_my_balance
+from entity.ticker_list import ticker_list
+
+import time
+start_time = time.time()
+
+buy_list = ticker_list()
+krw_balance = get_my_balance()
+print(krw_balance)
+
+end_time = time.time()
+print("실행 시간 : ", end_time - start_time)
 
 # wallet 점검
 for my_ticker in krw_balance.keys():
 	print("------------------")
-	print("1. my_ticker:", my_ticker)
 	try:
+		print("1. my_ticker:", my_ticker, krw_balance[my_ticker]['balance'])
 		if my_ticker not in buy_list.keys():
+			print('my_ticker not in buy_list:', my_ticker)
 			sellcoin_mp(my_ticker, str(krw_balance[my_ticker]['balance']))
-			print("2. successed sell ", buy_ticker)
+			print("2. successed sell ", my_ticker)
 	except Exception as e:
 		print("2. sellcoin_mp err:", e)
 		continue

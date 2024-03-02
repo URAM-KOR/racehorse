@@ -10,7 +10,9 @@ import websockets
 
 # 실행 환경에 따른 공통 모듈 Import
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from module import upbit
+from interface import upbit
+from interface.upbit import buycoin_mp, sellcoin_mp
+from entity.balance import get_my_balance
 
 # 프로그램 정보
 pgm_name = 'websocket'
@@ -54,7 +56,7 @@ async def upbit_ws_client():
         days = -1
 
         # 제외 종목
-        except_item = 'BTT'
+        except_item = ''
 
         # 구독 데이터 조회
         subscribe_items = get_subscribe_items(except_item)
@@ -92,6 +94,9 @@ async def upbit_ws_client():
             # pre_top_5_keys
             pre_top_5_keys = []
 
+            # buy function condition
+            start_time = time.time()  # 메인 루프가 시작된 시간 기록
+
             while True:
                 period = datetime.datetime.utcnow()
 
@@ -113,28 +118,18 @@ async def upbit_ws_client():
 
                 # 상위 5개 값만 선택
                 top_5_items = dict(sorted_items[:5])
+                logging.info(list(top_5_items))
+
                 if len(top_5_items) == 5:
-                    # logging.info(data)
-                    # logging.info(selected_data)
-                    logging.info(top_5_items)
-                    # logging.info(list(top_5_items))
-
                     # 이전 값 비교
-                    if pre_top_5_keys[0] != list(top_5_items)[0]:
-                        logging.info(f"선두로 나서는 {list(top_5_items)[0]}:{top_5_items[list(top_5_items)[0]]}")
+                    if pre_top_5_keys != list(top_5_items):
+                        logging.info(list(top_5_items))
                         not_speaked = True
-
-                    if pre_top_5_keys[1] != list(top_5_items)[1]:
-                        logging.info(f"2위로 달리는 {list(top_5_items)[1]}:{top_5_items[list(top_5_items)[1]]}")
-
-                    if not_speaked and top_5_items[list(top_5_items)[0]] - top_5_items[list(top_5_items)[1]] < 0.01:
-                        logging.info(f"2위에서 바짝 추격중인 {list(top_5_items)[1]}:{top_5_items[list(top_5_items)[1]]}")
-                        not_speaked = False
-
-                    if not_speaked and top_5_items[list(top_5_items)[0]] - top_5_items[list(top_5_items)[1]] > 0.02:
-                        logging.info(f"2위와 격차를 벌리는 선두 {list(top_5_items)[0]}:{top_5_items[list(top_5_items)[0]]}")
-                        not_speaked = False
-
+                
+                # 10초가 지났으면 이벤트 발생
+                if time.time() - start_time >= 10:
+                    await event_buy(top_5_items)
+                
                 pre_top_5_keys = list(top_5_items)
 
                 # 매일마다 순위 측정 다시 시작
@@ -158,13 +153,13 @@ async def upbit_ws_client():
 
                     # 종목 재조회
                     re_subscribe_items = get_subscribe_items(except_item)
-                    logging.info('\n\n')
-                    logging.info('*************************************************')
-                    logging.info('제외 종목 : [' + str(except_item) + ']')
-                    logging.info('기존 종목[' + str(len(subscribe_items)) + '] : ' + str(subscribe_items))
-                    logging.info('종목 재조회[' + str(len(re_subscribe_items)) + '] : ' + str(re_subscribe_items))
-                    logging.info('*************************************************')
-                    logging.info('\n\n')
+                    # logging.info('\n\n')
+                    # logging.info('*************************************************')
+                    # logging.info('제외 종목 : [' + str(except_item) + ']')
+                    # logging.info('기존 종목[' + str(len(subscribe_items)) + '] : ' + str(subscribe_items))
+                    # logging.info('종목 재조회[' + str(len(re_subscribe_items)) + '] : ' + str(re_subscribe_items))
+                    # logging.info('*************************************************')
+                    # logging.info('\n\n')
 
                     # 현재 종목과 다르면 웹소켓 다시 시작
                     if subscribe_items != re_subscribe_items:
@@ -183,6 +178,51 @@ async def upbit_ws_client():
 
         # 웹소켓 다시 시작
         await upbit_ws_client()
+
+                    
+async def event_buy(top_5_items):
+    # rate 계산
+    buy_list = {}
+    
+    buy_list[list(top_5_items)[0]]=(5)/(2*15)
+    buy_list[list(top_5_items)[1]]=(4)/(2*15)
+    buy_list[list(top_5_items)[2]]=(3)/(2*15)
+    buy_list[list(top_5_items)[3]]=(2)/(2*15)
+    buy_list[list(top_5_items)[4]]=(1)/(2*15)
+    
+    # wallet 점검
+    krw_balance = get_my_balance()
+    print(krw_balance)
+    for my_ticker in krw_balance.keys():
+        print("------------------")
+        try:
+            print("1. my_ticker:", my_ticker, krw_balance[my_ticker]['balance'])
+            if my_ticker not in buy_list.keys():
+                print('my_ticker not in buy_list:', my_ticker)
+                sellcoin_mp(my_ticker, str(krw_balance[my_ticker]['balance']))
+                print("2. successed sell ", my_ticker)
+        except Exception as e:
+            print("2. sellcoin_mp err:", e)
+            continue
+
+    # 차액 체크
+    for buy_ticker in buy_list.keys():
+        print("------------------")
+        print("1. buy_ticker:", buy_ticker)
+        try:
+            difference_balance = krw_balance['total'] * buy_list[buy_ticker] - krw_balance.get(buy_ticker, {}).get('balance_krw', 0)
+            print("2. difference_balance:", difference_balance)
+            if difference_balance > 0:
+                buycoin_mp(buy_ticker, str(difference_balance))
+                print("3. successed buy ", buy_ticker)
+            if difference_balance < 0:
+                difference_balance = difference_balance/krw_balance.get(buy_ticker, {}).get('trade_price', 1)
+                sellcoin_mp(buy_ticker, str(-difference_balance))
+                print("3. successed sell ", buy_ticker)
+        except Exception as e:
+            print("difference_balance err:", e)
+            continue
+            logging.info(buy_list)
 
 
 # -----------------------------------------------------------------------------
@@ -216,7 +256,7 @@ if __name__ == "__main__":
             upbit.set_loglevel(log_level)
         else:
             # 로그레벨(D:DEBUG, E:ERROR, 그외:INFO)
-            log_level = sys.argv[1].upper()
+            log_level = 'I'
             upbit.set_loglevel(log_level)
 
         if log_level == '':
