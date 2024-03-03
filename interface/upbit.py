@@ -329,9 +329,6 @@ def buycoin_tg(target_item, buy_amount, buy_price):
 # 시장가 매도
 def sellcoin_mp(target_item, volume):
     try:
-        # 잔고 조회
-        cur_balance = get_balance(target_item)
-
         params = {
             'market': target_item,
             'side': 'ask',

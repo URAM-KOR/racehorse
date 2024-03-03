@@ -18,15 +18,17 @@ def _update_profit_dict(current_total):
 		with open(file_path, 'rb') as file:
 			loaded_profit_dict = pickle.load(file)
 
-		if loaded_profit_dict['max_total'] is None:
-			loaded_profit_dict['max_total'] = current_total
-			with open(file_path, 'wb') as file:
-				pickle.dump(loaded_profit_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
-					
-		if current_total > loaded_profit_dict['max_total']:
-			loaded_profit_dict['profit'] += current_total - loaded_profit_dict['max_total']
-			loaded_profit_dict['net_profit'] = loaded_profit_dict['profit']/2
-			loaded_profit_dict['max_total'] = current_total
+			if loaded_profit_dict['max_total'] is None:
+				loaded_profit_dict['max_total'] = current_total
+						
+			if current_total > loaded_profit_dict['max_total']:
+				loaded_profit_dict['profit'] += current_total - loaded_profit_dict['max_total']
+				loaded_profit_dict['net_profit'] = loaded_profit_dict['profit']/2
+				loaded_profit_dict['max_total'] = current_total
+
+			if current_total < loaded_profit_dict['max_total']:
+				loaded_profit_dict['current_total'] = current_total
+    
 			with open(file_path, 'wb') as file:
 				pickle.dump(loaded_profit_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
 			
@@ -59,6 +61,8 @@ def get_my_balance():
 	krw_balance = {'total':float(next(item['balance'] for item in balance if item['currency'] == 'KRW'))}
 	print(balance)
 	for ticker in balance:
+		if ticker['currency'] == 'KRW' or ticker['currency'] == 'VTHO' or ticker['currency'] == 'APENFT':
+			continue
 		# print(ticker['currency'])
 		try:
 			krw_ticker = get_ticker(f"KRW-{ticker['currency']}")[0]['trade_price'] * float(ticker['balance'])

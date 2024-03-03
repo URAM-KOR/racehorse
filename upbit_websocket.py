@@ -7,6 +7,7 @@ import asyncio
 import logging
 import traceback
 import websockets
+import pickle
 
 # 실행 환경에 따른 공통 모듈 Import
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -96,6 +97,7 @@ async def upbit_ws_client():
 
             # buy function condition
             start_time = time.time()  # 메인 루프가 시작된 시간 기록
+            rest_time = time.time()  # 메인 루프가 시작된 시간 기록
 
             while True:
                 period = datetime.datetime.utcnow()
@@ -118,17 +120,25 @@ async def upbit_ws_client():
 
                 # 상위 5개 값만 선택
                 top_5_items = dict(sorted_items[:5])
-                logging.info(list(top_5_items))
+                
+                # broadcast 딕셔너리에서 상위 5개 키만 남기기
+                broadcast = top_5_items
+                # logging.info(list(top_5_items))
 
                 if len(top_5_items) == 5:
                     # 이전 값 비교
                     if pre_top_5_keys != list(top_5_items):
+                        logging.info(data)
                         logging.info(list(top_5_items))
                         not_speaked = True
                 
                 # 10초가 지났으면 이벤트 발생
                 if time.time() - start_time >= 10:
-                    await event_buy(top_5_items)
+                    # logging.info("Time to event!")
+                    file_path = 'top_5_items.pkl'                    
+                    with open(file_path, 'wb') as file:
+                        pickle.dump(top_5_items, file, protocol=pickle.HIGHEST_PROTOCOL)
+                        # await event_buy(top_5_items)
                 
                 pre_top_5_keys = list(top_5_items)
 
@@ -146,27 +156,27 @@ async def upbit_ws_client():
                     # 순위 리셋
                     broadcast = {}
 
-                # 5초마다 종목 정보 재 조회 후 추가된 종목이 있으면 웹소켓 다시 시작
-                if (period.second % 5) == 0 and seconds != period.second:
-                    # 중복 실행 방지
-                    seconds = period.second
+                # # 5초마다 종목 정보 재 조회 후 추가된 종목이 있으면 웹소켓 다시 시작
+                # if (period.second % 5) == 0 and seconds != period.second:
+                #     # 중복 실행 방지
+                #     seconds = period.second
 
-                    # 종목 재조회
-                    re_subscribe_items = get_subscribe_items(except_item)
-                    # logging.info('\n\n')
-                    # logging.info('*************************************************')
-                    # logging.info('제외 종목 : [' + str(except_item) + ']')
-                    # logging.info('기존 종목[' + str(len(subscribe_items)) + '] : ' + str(subscribe_items))
-                    # logging.info('종목 재조회[' + str(len(re_subscribe_items)) + '] : ' + str(re_subscribe_items))
-                    # logging.info('*************************************************')
-                    # logging.info('\n\n')
+                #     # 종목 재조회
+                #     re_subscribe_items = get_subscribe_items(except_item)
+                #     # logging.info('\n\n')
+                #     # logging.info('*************************************************')
+                #     # logging.info('제외 종목 : [' + str(except_item) + ']')
+                #     # logging.info('기존 종목[' + str(len(subscribe_items)) + '] : ' + str(subscribe_items))
+                #     # logging.info('종목 재조회[' + str(len(re_subscribe_items)) + '] : ' + str(re_subscribe_items))
+                #     # logging.info('*************************************************')
+                #     # logging.info('\n\n')
 
-                    # 현재 종목과 다르면 웹소켓 다시 시작
-                    if subscribe_items != re_subscribe_items:
-                        logging.info('종목 달리짐! 웹소켓 다시 시작')
-                        await websocket.close()
-                        time.sleep(1)
-                        await upbit_ws_client()
+                #     # 현재 종목과 다르면 웹소켓 다시 시작
+                #     if subscribe_items != re_subscribe_items:
+                #         logging.info('종목 달리짐! 웹소켓 다시 시작')
+                #         await websocket.close()
+                #         time.sleep(1)
+                #         await upbit_ws_client()
 
     # ----------------------------------------
     # 모든 함수의 공통 부분(Exception 처리)
@@ -178,51 +188,6 @@ async def upbit_ws_client():
 
         # 웹소켓 다시 시작
         await upbit_ws_client()
-
-                    
-async def event_buy(top_5_items):
-    # rate 계산
-    buy_list = {}
-    
-    buy_list[list(top_5_items)[0]]=(5)/(2*15)
-    buy_list[list(top_5_items)[1]]=(4)/(2*15)
-    buy_list[list(top_5_items)[2]]=(3)/(2*15)
-    buy_list[list(top_5_items)[3]]=(2)/(2*15)
-    buy_list[list(top_5_items)[4]]=(1)/(2*15)
-    
-    # wallet 점검
-    krw_balance = get_my_balance()
-    print(krw_balance)
-    for my_ticker in krw_balance.keys():
-        print("------------------")
-        try:
-            print("1. my_ticker:", my_ticker, krw_balance[my_ticker]['balance'])
-            if my_ticker not in buy_list.keys():
-                print('my_ticker not in buy_list:', my_ticker)
-                sellcoin_mp(my_ticker, str(krw_balance[my_ticker]['balance']))
-                print("2. successed sell ", my_ticker)
-        except Exception as e:
-            print("2. sellcoin_mp err:", e)
-            continue
-
-    # 차액 체크
-    for buy_ticker in buy_list.keys():
-        print("------------------")
-        print("1. buy_ticker:", buy_ticker)
-        try:
-            difference_balance = krw_balance['total'] * buy_list[buy_ticker] - krw_balance.get(buy_ticker, {}).get('balance_krw', 0)
-            print("2. difference_balance:", difference_balance)
-            if difference_balance > 0:
-                buycoin_mp(buy_ticker, str(difference_balance))
-                print("3. successed buy ", buy_ticker)
-            if difference_balance < 0:
-                difference_balance = difference_balance/krw_balance.get(buy_ticker, {}).get('trade_price', 1)
-                sellcoin_mp(buy_ticker, str(-difference_balance))
-                print("3. successed sell ", buy_ticker)
-        except Exception as e:
-            print("difference_balance err:", e)
-            continue
-            logging.info(buy_list)
 
 
 # -----------------------------------------------------------------------------
